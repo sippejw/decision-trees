@@ -1,3 +1,10 @@
+### DATA CLEANING PIPELINE PART 1
+### -> load data from raw csv
+### -> bin data based on fire size
+### -> subsample with probability ~1/bin_freq
+### -> graph firesize distribution
+### -> save full subsampled data, subsampled coordinates
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -60,7 +67,11 @@ bin_lower = big_data.FIRE_SIZE.min()
 ### determine bins, bin counts
 for i in range(bdnp.shape[0]):
     for j in range(n_bins):
-        if bdnp[i, 0] <= (1+j)*(bin_upper-bin_lower)/n_bins:
+        if bdnp[i, 0] <= (1+j)*(bin_upper-bin_lower)/n_bins and j < n_bins-1:
+            pts_to_bins[i] = j
+            bincounts[j] += 1
+            break
+        elif j == n_bins-1:
             pts_to_bins[i] = j
             bincounts[j] += 1
             break
