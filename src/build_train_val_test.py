@@ -12,6 +12,14 @@ import sys
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
+testmode = True
+
+def within_eps(xlat, xlon, ylat, ylon, eps):
+    if abs(xlat - ylat) <= eps and abs(xlon - ylon) <= eps:
+        #within eps
+        return True
+    return False
+
 ### dataset_name, test_frac, val_frac, val_folds, diagnostics
 if len(sys.argv) < 5:
     print("args: dataset_name test_frac val_frac val_folds")
@@ -73,18 +81,46 @@ if not os.path.isdir("../data/"+data_name):
     test_txt = txt_np[test_ids]
 
     ###imgref
+    ###
+    ###
+    
+    sat_img_dir_contents = os.listdir("../data/satellite_images")
+    #print("sat contents:", sat_img_dir_contents)
+    sidc_fconverted = []
+    for i in range(len(sat_img_dir_contents)):
+        if sat_img_dir_contents[i][-4:] == ".png":
+            sidc_fconverted.append(sat_img_dir_contents[i][:-4].split(',') + [sat_img_dir_contents[i]])
+            sidc_fconverted[-1][0] = float(sidc_fconverted[-1][0])
+            sidc_fconverted[-1][1] = float(sidc_fconverted[-1][1])
+            print(sidc_fconverted[-1])
+    #print("range: ", raw_np.shape, len(sidc_fconverted))
+    
+    eps = 0.00001
+    fnames_associated = ["" for ii in range(raw_np.shape[0])]
     for i in range(raw_np.shape[0]):
-        lat = raw_np[i, 1]
-        lon = raw_np[i, 2]
+        lat = float(raw_np[i, 1])
+        lon = float(raw_np[i, 2])
+        for j in range(len(sidc_fconverted)):
+            #if i > 4070 and i < 4081:
+                #print(i, lat, lon, sidc_fconverted[j])
+            if within_eps(lat, lon, sidc_fconverted[j][0], sidc_fconverted[j][1], eps):
+                fnames_associated[i] = sidc_fconverted[j][2]
+                print("connected")
+                print(sidc_fconverted[j][2], lat, lon)
+                break
         #search for image with this lat, long
+    flinked = np.array(fnames_associated)
         
+    ###
+    ###
+    ###
 
     ### save test data
     df_test_num = pd.DataFrame(test_numeric, columns = data_cols[:-2])
     df_test_txt = pd.DataFrame(test_txt, columns = data_cols[-2:])
     df_test_globalidx = pd.DataFrame(test_ids, columns=['global'])
-    df_test_imgref = pd.DataFrame(test_ids, columns=['global'])
-    mega_test = pd.concat([df_test_globalidx, df_test_num, df_test_txt], axis=1)
+    df_test_imgref = pd.DataFrame(flinked[test_ids], columns=['imgs'])
+    mega_test = pd.concat([df_test_globalidx, df_test_imgref, df_test_num, df_test_txt], axis=1)
     mega_test.to_csv("../data/"+data_name+"/test/testset.csv", index=False)
                           
     if diagnostics:
@@ -100,7 +136,8 @@ if not os.path.isdir("../data/"+data_name):
         plt.ylabel('Log Bin Frequency')
         plt.title('Wildfire Size Distributions in Test and Complete Train Datasets')
         plt.savefig('../viz/full_train_test_firesize_dist.png')
-        plt.show()
+        if not testmode:
+            plt.show()
         
     for i in range(val_folds):
         print("building validation fold " + str(val_folds))
@@ -113,13 +150,15 @@ if not os.path.isdir("../data/"+data_name):
         df_train_num = pd.DataFrame(train_i_num, columns = data_cols[:-2])
         df_train_txt = pd.DataFrame(train_i_txt, columns = data_cols[-2:])
         df_train_globalidx = pd.DataFrame(train_i, columns=['global'])
-        mega_train = pd.concat([df_train_globalidx, df_train_num, df_train_txt], axis=1)
+        df_train_imgref = pd.DataFrame(flinked[train_i], columns=['imgs'])
+        mega_train = pd.concat([df_train_globalidx, df_train_imgref, df_train_num, df_train_txt], axis=1)
         mega_train.to_csv("../data/"+data_name+"/train_fold_"+str(i)+"/trainset.csv", index=False)
 
         df_val_num = pd.DataFrame(val_i_num, columns = data_cols[:-2])
         df_val_txt = pd.DataFrame(val_i_txt, columns = data_cols[-2:])
         df_val_globalidx = pd.DataFrame(val_i, columns=['global'])
-        mega_val = pd.concat([df_val_globalidx, df_val_num, df_val_txt], axis=1)
+        df_val_imgref = pd.DataFrame(flinked[val_i], columns=['imgs'])
+        mega_val = pd.concat([df_val_globalidx, df_val_imgref, df_val_num, df_val_txt], axis=1)
         mega_val.to_csv("../data/"+data_name+"/train_fold_"+str(i)+"/valset.csv", index=False)
         if diagnostics:
             fig = plt.figure(figsize = (10, 5))
@@ -130,7 +169,12 @@ if not os.path.isdir("../data/"+data_name):
             plt.ylabel('Log Bin Frequency')
             plt.title('Wildfire Size Distribution of Train and Validation Datasets, fold ' + str(i))
             plt.savefig('../viz/train_val_firesize_dist_fold_'+str(i)+'.png')
-            plt.show()
+            if not testmode:
+                plt.show()
+
+    if testmode:
+        if data_name != "csv" and data_name != "satellite_images":
+            os.system('rm -r ../data/'+data_name)
         
     print("done")
 else:
