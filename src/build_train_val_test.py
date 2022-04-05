@@ -4,6 +4,7 @@
 ### -> split into train/test/val
 
 ### eg python3 build_train_val_test.py dataset_test_1 0.3 0.2 10 true
+### or python3 build_train_val_test.py dataset_test_1 0.3 0.2 1 true
 
 import pandas as pd
 import numpy as np
@@ -97,6 +98,7 @@ if not os.path.isdir("../data/"+data_name):
     
     eps = 0.00001
     fnames_associated = ["" for ii in range(raw_np.shape[0])]
+    total_matches = 0
     for i in range(raw_np.shape[0]):
         lat = float(raw_np[i, 1])
         lon = float(raw_np[i, 2])
@@ -105,12 +107,14 @@ if not os.path.isdir("../data/"+data_name):
                 #print(i, lat, lon, sidc_fconverted[j])
             if within_eps(lat, lon, sidc_fconverted[j][0], sidc_fconverted[j][1], eps):
                 fnames_associated[i] = sidc_fconverted[j][2]
-                print("connected")
-                print(sidc_fconverted[j][2], lat, lon)
+                #print("connected")
+                #print(sidc_fconverted[j][2], lat, lon)
+                total_matches += 1
                 break
         #search for image with this lat, long
     flinked = np.array(fnames_associated)
-        
+    print("total matches: ", total_matches, "out of", raw_np.shape[0])
+    
     ###
     ###
     ###
