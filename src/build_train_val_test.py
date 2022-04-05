@@ -99,7 +99,11 @@ if not os.path.isdir("../data/"+data_name):
     eps = 0.00001
     fnames_associated = ["" for ii in range(raw_np.shape[0])]
     total_matches = 0
+    print("progress:", end="")
     for i in range(raw_np.shape[0]):
+        if (i + 1) % raw_np.shape[0]//50 == 0:
+            #progress...
+            print(">", end="")
         lat = float(raw_np[i, 1])
         lon = float(raw_np[i, 2])
         for j in range(len(sidc_fconverted)):
@@ -113,6 +117,7 @@ if not os.path.isdir("../data/"+data_name):
                 break
         #search for image with this lat, long
     flinked = np.array(fnames_associated)
+    print("")
     print("total matches: ", total_matches, "out of", raw_np.shape[0])
     
     ###
