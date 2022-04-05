@@ -91,7 +91,7 @@ pts_bin_weights = pts_bin_weights/np.sum(pts_bin_weights)
 print("subsampling datapoints...")
 indices = np.arange(bdnp.shape[0])
 nsamples = 100000
-ss_data = np.random.choice(indices, size=nsamples, p=pts_bin_weights)
+ss_data = np.random.choice(indices, size=nsamples, p=pts_bin_weights, replace=False)
 
 ### check distribution w/ graph
 print("graphing size distribution...")
