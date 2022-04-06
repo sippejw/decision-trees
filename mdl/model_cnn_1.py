@@ -22,6 +22,8 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
 
 #custom
-from ..src import data_obj
+sys.path.insert(0, '../src')
+from data_obj import satimg_loader
+from data_fold import satimg_set
 
 print("imported all")

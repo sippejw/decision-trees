@@ -60,8 +60,8 @@ class satimg_set:
                     sum_x_x += self.img_memory[i] * self.img_memory[i]
                 print("loaded", self.full_data.shape[0].shape[0], "images.")
                 for i in range(3):
-                self.observed_x[i] = np.sum(sum_x[:,:,i])
-                self.observed_x_x[i] = np.sum(sum_x_x[:,:,i])
+                    self.observed_x[i] = np.sum(sum_x[:,:,i])
+                    self.observed_x_x[i] = np.sum(sum_x_x[:,:,i])
                 if mode == "per":
                     big_n = self.img_size * self.img_size * self.full_data.shape[0]
                     for i in range(3):
@@ -125,13 +125,15 @@ class satimg_set:
         if not self.mem_sensitive:
             for i in range(self.full_data.shape[0]):
                 for j in range(3):
-                    self.img_memory[i,:,:,j] = (self.img_memory[i,:,:,j] - self.mean_stds[0][i]) / self.mean_stds[1][i])
+                    self.img_memory[i,:,:,j] = (self.img_memory[i,:,:,j] - self.mean_stds[0][i]) / self.mean_stds[1][i]
 
-     def on_epoch_end(self):
+    def on_epoch_end(self):
         if self.shuffle:
             np.random.shuffle(self.indexes)
     
-    def load_img(self, img_loc, m_s=self.mean_stds):
+    def load_img(self, img_loc, m_s="use_standard"):
+        if m_s == "use_standard":
+            m_s = self.mean_stds
         image = np.asarray(Image.open(img_loc))
         #should be shape (img_size, img_size, 3)
         for i in range(3):
