@@ -18,7 +18,7 @@ class satimg_loader:
         ### IDX | IMGref | FIRE_SIZE | LAT | LONG | YEAR | DISC_DATE | CONT_DATE | DIC_TIME | DISC_DOY | CONT_DOY |
         ### CONT_TIME | STAT_CAUSE | FIRE_NAME
 
-        ### TODO: fix normalization for test mode, eg do normailization on combined train/val
+        ### TODO: fix normalization for test mode, eg. do normailization on combined train/val
 
         test_data_in_np = pd.read_csv("../data/"+dataname+"/test/testset.csv").to_numpy()
         test_set = satimg_set(test_data_in_np, shuffle[0], "../data/satellite_images/", batch[0], imgsize,
