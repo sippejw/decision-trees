@@ -33,6 +33,7 @@ def within_eps(xlat, xlon, ylat, ylon, eps):
 ### deal with command line args
 ### diagnostics mode: use 2 to build actual dataset, 1 to test
 ### dataset_name, test_frac, val_frac, val_folds, diagnostics
+### ie python3 build_train_val_test.py test2data 0.3 0.2 1 2
 if len(sys.argv) < 5:
     print("args: dataset_name test_frac val_frac val_folds")
 data_name = sys.argv[1]

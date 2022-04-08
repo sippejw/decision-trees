@@ -2,7 +2,7 @@
 
 import pandas as pd
 import numpy as np
-import keras.utils as kr_utils
+import tensorflow.keras.utils as kr_utils
 from PIL import Image
 import math
 
@@ -10,7 +10,7 @@ import math
 ### no idea
 ### observe_mode in {per, global, off}
 
-class satimg_set:
+class satimg_set (kr_utils.Sequence):
     def __init__ (self, data_in, shuffle, path_prefix, batch_size, expect_img_size,
                   mean_stds, dataname = "", mem_sensitive=True, observe_mode="per"):
         print("initializing datafold " + dataname)
@@ -126,7 +126,7 @@ class satimg_set:
             return [np.array(self.observed_mean), np.array(self.observed_std)]
         else:
             self.compute_mean_stds(mode=mode_in)
-            [np.array(self.observed_mean), np.array(self.observed_std)]
+            return [np.array(self.observed_mean), np.array(self.observed_std)]
 
     def get_observed_m_s(self):
         return [np.array(self.observed_mean), np.array(self.observed_std)]
@@ -146,6 +146,10 @@ class satimg_set:
         if m_s == "use_standard":
             m_s = self.mean_stds
         image = np.array(Image.open(img_loc))[:,:,:3]
+        #print(image.shape, m_s, self.dataname)
+        #if not isinstance(image, np.ndarray):
+        #    if image == None:
+        #        print("uhoh")
         if not skip:
             for i in range(3):
                 image[:,:,i] = (image[:,:,i] - m_s[0][i]) / m_s[1][i]
@@ -161,6 +165,7 @@ class satimg_set:
         if self.mem_sensitive:
             ret_imgs = np.zeros((len(ret_indices), self.img_size, self.img_size, 3))
             for i in range(len(ret_indices)):
+                #print("img_ref=", self.path_prefix+self.X_img_ref[i])
                 ret_imgs[i] = self.load_img(self.path_prefix + self.X_img_ref[i])
             return ret_imgs, self.y[ret_indices]
         else:

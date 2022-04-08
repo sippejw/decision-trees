@@ -27,12 +27,15 @@ sys.path.insert(0, '../src')
 from data_obj import satimg_loader
 from data_fold import satimg_set
 
+img_size = 512
+batch_size = 12
+
 print("imported all")
 
 ### test
 print("making dataset...")
-dataset = satimg_loader("mini_data", 1, [True, True, True], [12, 12, 12],
-                        512, "default", True, "per")
+dataset = satimg_loader("mini_data", 1, [True, True, True], [batch_size]*3,
+                        img_size, "default", True, "per")
 print("made datset")
 ### train is dataset.train_fold[i]
 ### test is dataset.test_set
@@ -40,3 +43,22 @@ print("made datset")
 
 b_x_trial, b_y_trial = dataset.train_fold[0][0]
 print(b_x_trial.shape, b_y_trial.shape)
+
+print("building model..")
+model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
+                                 keras.layers.Conv2D(filters=8, kernel_size=(3, 3), strides=2,activation="relu"),
+                                 keras.layers.MaxPooling2D(2, 2),
+                                 keras.layers.Conv2D(filters=16, kernel_size=(3, 3), strides=2, activation="relu"),
+                                 keras.layers.MaxPooling2D(2, 2),
+                                 keras.layers.Conv2D(filters=32, kernel_size=(3,3), strides=2, activation="relu"),
+                                 keras.layers.MaxPooling2D(2, 2),
+                                 keras.layers.Flatten(),
+                                 keras.layers.Dense(128, activation="relu"),
+                                 keras.layers.Dense(128, activation="relu"),
+                                 keras.layers.Dense(1)])
+print("compiling model...")
+model1.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
+### insert callbacks here
+print("training...")
+model1.fit(dataset.train_fold[0], epochs=2, validation_data=dataset.validation_fold[0])
+print("done")

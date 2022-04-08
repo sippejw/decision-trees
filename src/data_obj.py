@@ -46,6 +46,7 @@ class satimg_loader:
             self.train_fold.append(satimg_set(temp_train, shuffle[2], "../data/satellite_images/", batch[2], imgsize,
                               musigs[2], dataname=dataname + "_train_set", mem_sensitive=mem, observe_mode=omode))
             fold_m_s = self.train_fold[-1].get_or_compute_m_s(mode_in=omode)
+            print(fold_m_s)
             self.train_fold[-1].apply_observed_m_s()
 
             self.validation_fold.append(satimg_set(temp_val, shuffle[1], "../data/satellite_images/", batch[1], imgsize,
