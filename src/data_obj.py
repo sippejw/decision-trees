@@ -5,38 +5,50 @@ import numpy as np
 from data_fold import satimg_set
 
 class satimg_loader:
+    ### dataname:       name of dataset file            string
+    ### expect_folds:   number of x-validation folds    int
+    ### shuffle:        whether to shuffle each epoch   [bool, bool, bool]
+    ### batch:          batch sizes for each set        [int, int, int]
+    ### imgsize:        dimensions of image expected    int
+    ### musigs:         mean, std deviations to use     ...
+    ### mem:            memory sensitive mode           bool
+    ### omode:          whether to use per-fold or global means, stds
+    
     def __init__ (self, dataname, expect_folds, shuffle, batch, imgsize, musigs, mem, omode):
         print("building sets...")
         self.dataset_name = dataname
         self.k_folds = expect_folds
-        self.test_params = test_params
-        self.val_params = val_params
-        self.train_params = train_params
+        #self.test_params = test_params
+        #self.val_params = val_params
+        #self.train_params = train_params
 
         ### LOAD IN THE DATA
         ### COLS:
         ### IDX | IMGref | FIRE_SIZE | LAT | LONG | YEAR | DISC_DATE | CONT_DATE | DIC_TIME | DISC_DOY | CONT_DOY |
         ### CONT_TIME | STAT_CAUSE | FIRE_NAME
 
+        if musigs == "default":
+            musigs = [[np.array([0, 0, 0]), np.array([1, 1, 1])]]*3
+
         ### TODO: fix normalization for test mode, eg. do normailization on combined train/val
 
         test_data_in_np = pd.read_csv("../data/"+dataname+"/test/testset.csv").to_numpy()
-        test_set = satimg_set(test_data_in_np, shuffle[0], "../data/satellite_images/", batch[0], imgsize,
+        self.test_set = satimg_set(test_data_in_np, shuffle[0], "../data/satellite_images/", batch[0], imgsize,
                               musigs[0], dataname=dataname + "_test_set", mem_sensitive=mem, observe_mode=omode)
 
-        train_fold = []
-        validation_fold = []
+        self.train_fold = []
+        self.validation_fold = []
 
         for i in range(self.k_folds):
             temp_train = pd.read_csv("../data/"+dataname+"/train_fold_"+str(i)+"/trainset.csv").to_numpy()
             temp_val = pd.read_csv("../data/"+dataname+"/train_fold_"+str(i)+"/trainset.csv").to_numpy()
 
-            train_fold.append(satimg_set(temp_train, shuffle[2], "../data/satellite_images/", batch[2], imgsize,
+            self.train_fold.append(satimg_set(temp_train, shuffle[2], "../data/satellite_images/", batch[2], imgsize,
                               musigs[2], dataname=dataname + "_train_set", mem_sensitive=mem, observe_mode=omode))
-            fold_m_s = train_fold[-1].get_or_compute_m_s(mode_in=omode)
-            train_fold[-1].apply_observed_m_s()
+            fold_m_s = self.train_fold[-1].get_or_compute_m_s(mode_in=omode)
+            self.train_fold[-1].apply_observed_m_s()
 
-            validation_fold.append(satimg_set(temp_val, shuffle[1], "../data/satellite_images/", batch[1], imgsize,
+            self.validation_fold.append(satimg_set(temp_val, shuffle[1], "../data/satellite_images/", batch[1], imgsize,
                               fold_m_s, dataname=dataname + "_validation_set", mem_sensitive=mem, observe_mode=omode))
 
     

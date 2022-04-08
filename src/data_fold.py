@@ -16,6 +16,7 @@ class satimg_set:
         print("initializing datafold " + dataname)
         self.dataname = dataname
         self.shuffle = shuffle
+        self.batch_size = batch_size
         self.path_prefix = path_prefix
         self.full_data = data_in
         #expect [(3,), (3,)]
@@ -89,9 +90,13 @@ class satimg_set:
             sum_x = np.zeros((self.img_size, self.img_size, 3))
             sum_x_x = np.zeros((self.img_size, self.img_size, 3))
             for i in range(self.full_data.shape[0]):
-                temp_img = self.load_img(self.path_prefix + self.X_img_ref[i, 0], fake_ms)
+                temp_img = self.load_img(self.path_prefix + self.X_img_ref[i], fake_m_s, skip=True).astype('int64')
                 sum_x += temp_img
-                sum_x_x += temp_img * temp_img
+                sum_x_x += np.multiply(temp_img, temp_img)
+                #print("**")
+                #print(temp_img)
+                #print(np.multiply(temp_img, temp_img))
+                #print("**")
             for i in range(3):
                 self.observed_x[i] = np.sum(sum_x[:,:,i])
                 self.observed_x_x[i] = np.sum(sum_x_x[:,:,i])
@@ -99,7 +104,13 @@ class satimg_set:
                 big_n = self.img_size * self.img_size * self.full_data.shape[0]
                 for i in range(3):
                     self.observed_mean[i] = self.observed_x[i]/big_n
-                    self.observed_std[i] = math.sqrt((self.observed_x_x[i]/big_n) - math.pow(observed_x[i]/big_n, 2))
+                    print("**")
+                    print(big_n)
+                    print(self.observed_mean[i])
+                    print(self.observed_x_x[i])
+                    print(self.observed_x[i])
+                    print("**")
+                    self.observed_std[i] = math.sqrt((self.observed_x_x[i]/big_n) - (self.observed_x[i]/big_n)**2)
             elif mode == "global":
                 big_n = self.img_size * self.img_size * self.full_data.shape[0]*3
                 x_total = self.observed_x[0] + self.observed_x[1] + self.observed_x[2]
@@ -131,13 +142,14 @@ class satimg_set:
         if self.shuffle:
             np.random.shuffle(self.indexes)
     
-    def load_img(self, img_loc, m_s="use_standard"):
+    def load_img(self, img_loc, m_s="use_standard", skip = False):
         if m_s == "use_standard":
             m_s = self.mean_stds
-        image = np.asarray(Image.open(img_loc))
-        #should be shape (img_size, img_size, 3)
-        for i in range(3):
-            image[:,:,i] = (image[:,:,i] - m_s[0][i]) / m_s[1][i]
+        image = np.array(Image.open(img_loc))[:,:,:3]
+        if not skip:
+            for i in range(3):
+                image[:,:,i] = (image[:,:,i] - m_s[0][i]) / m_s[1][i]
+        
         return image
         
     def __len__ (self):
@@ -145,11 +157,11 @@ class satimg_set:
 
     def __getitem__ (self, idx):
         #return picture data batch
-        ret_indices = self.indexes[idx*self.batch_size : min((idx*self.batch_size) + 1, self.full_data.shape[0])]
+        ret_indices = self.indexes[idx*self.batch_size : min(((idx + 1)*self.batch_size), self.full_data.shape[0])]
         if self.mem_sensitive:
             ret_imgs = np.zeros((len(ret_indices), self.img_size, self.img_size, 3))
             for i in range(len(ret_indices)):
-                ret_imgs[i] = self.load_img(self.path_prefix + self.X_img_ref[i, 0])
+                ret_imgs[i] = self.load_img(self.path_prefix + self.X_img_ref[i])
             return ret_imgs, self.y[ret_indices]
         else:
             return self.img_memory[ret_indices], self.y[ret_indices]
