@@ -32,9 +32,14 @@ batch_size = 12
 
 print("imported all")
 
+if len(sys.argv) < 2:
+    print("args: dataset_name num_epochs")
+data_name = sys.argv[1]
+num_epochs = int(sys.argv[2])
+
 ### test
 print("making dataset...")
-dataset = satimg_loader("mini_data", 1, [True, True, True], [batch_size]*3,
+dataset = satimg_loader(data_name, 1, [True, True, True], [batch_size]*3,
                         img_size, "default", True, "per")
 print("made datset")
 ### train is dataset.train_fold[i]
@@ -60,5 +65,5 @@ print("compiling model...")
 model1.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
 ### insert callbacks here
 print("training...")
-model1.fit(dataset.train_fold[0], epochs=2, validation_data=dataset.validation_fold[0])
+model1.fit(dataset.train_fold[0], epochs=num_epochs, validation_data=dataset.validation_fold[0])
 print("done")
