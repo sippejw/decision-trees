@@ -1,6 +1,6 @@
-### model basic
+### model subsample pooling
 
-print("importing...")
+print("importing requirements")
 #basic imports
 import numpy as np
 import pandas as pd
@@ -27,25 +27,32 @@ sys.path.insert(0, '../src')
 from data_obj import satimg_loader
 from data_fold import satimg_set
 
+default_dataset = "mini_data"
+default_splits = "mini_data"
+
+kwa_len = len(sys.argv)
+if kwa_len > 1:
+    default_dataset = sys.argv[1]
+if kwa_len > 2:
+    default_splits = int(sys.argv[2])
+
 img_size = 512
 batch_size = 12
 
 print("imported all")
 
-### test
 print("making dataset...")
-dataset = satimg_loader("mini_data", 1, [True, True, True], [batch_size]*3,
+dataset = satimg_loader(default_dataset, default_splits, [True, True, True], [batch_size]*3,
                         img_size, "default", True, "per")
+
 print("made datset")
-### train is dataset.train_fold[i]
-### test is dataset.test_set
-### val is dataset.val_fold[i]
 
 b_x_trial, b_y_trial = dataset.train_fold[0][0]
 print(b_x_trial.shape, b_y_trial.shape)
 
-print("building model..")
+print("building model...")
 model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
+                                 keras.layers.AveragePooling2D(pool_size=(2, 2), strides=(2,2)),
                                  keras.layers.Conv2D(filters=8, kernel_size=(3, 3), strides=2,activation="relu"),
                                  keras.layers.MaxPooling2D(2, 2),
                                  keras.layers.Conv2D(filters=16, kernel_size=(3, 3), strides=2, activation="relu"),
@@ -56,9 +63,3 @@ model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size,
                                  keras.layers.Dense(128, activation="relu"),
                                  keras.layers.Dense(128, activation="relu"),
                                  keras.layers.Dense(1)])
-print("compiling model...")
-model1.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
-### insert callbacks here
-print("training...")
-model1.fit(dataset.train_fold[0], epochs=50, validation_data=dataset.validation_fold[0])
-print("done")
