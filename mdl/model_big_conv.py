@@ -92,7 +92,7 @@ if save_checkpoints:
         default_mdlname, # name of file to save the best model to
         monitor="val_mean_squared_error", # prefix val to specify that we want the model with best macroF1 on the validation data
         verbose=1, # prints out when the model achieve a better epoch
-        mode="max", # the monitored metric should be maximized
+        mode="min", # the monitored metric should be maximized
         save_freq="epoch", # clear
         save_best_only=True, # of course, if not, every time a new best is achieved will be savedf differently
         save_weights_only=True # this means that we don't have to save the architecture, if you change the architecture, you'll loose the old weights
