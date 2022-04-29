@@ -32,6 +32,14 @@ from data_fold import satimg_set
 img_size = 512
 batch_size = 12
 
+def elasti_loss(x, y, lambduh=0.5):
+    # x is np.array with shape (batch_size, out_dim) ?
+    # y is np.array with shape (batch_size, out_dim) ?
+    # lambda between 0 and 1 is the tradeoff between L1 and L2
+    #l1 = np.abs(np.array(x - y))
+    #l2 = np.square(np.array(x - y))
+    return (lamduh*np.abs(x-y) + (1-lambduh)*np.square(x-y))
+
 ### run with python3 model_big_conv.py dataset_name 1 n_epochs modelname True
 
 default_dataset = "mini_data"
@@ -73,19 +81,27 @@ print("building model..")
 
 base_model = EfficientNetB1(weights='imagenet', include_top=False)
 img_in = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
-                                  leras.layers.Conv2D(fiters=3, kernel_size=(3, 3), strides=2, padding='valid', activation='relu'),
-                                  keras.layers.MaxPooling2D(3, 3),
-                                  leras.layers.Conv2D(fiters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
-                                  keras.layers.MaxPooling2D(3, 3),
-                                  leras.layers.Conv2D(fiters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu')])
+                                  keras.layers.Conv2D(filters=3, kernel_size=(3, 3), strides=2, padding='valid', activation='relu'),
+                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
+                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
+                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
+                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
+                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
+                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu')])
 
-img_out = img_in.output
-
-x = base_model.output(img_out)
+#img_out = img_in.output
+print("in_shape: ", img_in.output_shape)
+print("pre_in_shape: ", base_model.input_shape)
+x = base_model.output
 x = GlobalAveragePooling2D()(x)
 x = Dense(1024, activation='relu')(x)
 out_pred = Dense(1, activation='relu')(x)
-model = Model(inputs=base_model.input, outputs=predictions)
+tmodel = Model(inputs=base_model.input, outputs=out_pred)
+
+model = Model(inputs = img_in.inputs, outputs = tmodel(img_in(img_in.inputs)))
+
+for layer in base_model.layers:
+    layer.trainable = False
 
 
 """
@@ -107,7 +123,9 @@ model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size,
 print("model:")
 print(model.summary())
 print("compiling model...")
-model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
+#model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
+model.compile(optimizer=keras.optimizers.adam_v2.Adam(learning_rate=4e-4), loss=elasti_loss,
+              metrics=[elasti_loss])
 ### insert callbacks here
 callbackL = []
 if save_checkpoints:

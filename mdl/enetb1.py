@@ -73,20 +73,27 @@ print("building model..")
 
 base_model = EfficientNetB1(weights='imagenet', include_top=False)
 img_in = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
-                                  leras.layers.Conv2D(fiters=3, kernel_size=(3, 3), strides=2, padding='valid', activation='relu'),
-                                  keras.layers.MaxPooling2D(3, 3),
-                                  leras.layers.Conv2D(fiters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
-                                  keras.layers.MaxPooling2D(3, 3),
-                                  leras.layers.Conv2D(fiters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu')])
+                                  keras.layers.Conv2D(filters=3, kernel_size=(3, 3), strides=2, padding='valid', activation='relu'),
+                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
+                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
+                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
+                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
+                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
+                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu')])
 
-img_out = img_in.output
-
-x = base_model.output(img_out)
+#img_out = img_in.output
+print("in_shape: ", img_in.output_shape)
+print("pre_in_shape: ", base_model.input_shape)
+x = base_model.output
 x = GlobalAveragePooling2D()(x)
 x = Dense(1024, activation='relu')(x)
 out_pred = Dense(1, activation='relu')(x)
-model = Model(inputs=base_model.input, outputs=predictions)
+tmodel = Model(inputs=base_model.input, outputs=out_pred)
 
+model = Model(inputs = img_in.inputs, outputs = tmodel(img_in(img_in.inputs)))
+
+for layer in base_model.layers:
+    layer.trainable = False
 
 """
 model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
