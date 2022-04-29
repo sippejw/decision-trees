@@ -32,13 +32,16 @@ from data_fold import satimg_set
 img_size = 512
 batch_size = 12
 
-def elasti_loss(x, y, lambduh=0.5):
+lambduh = 0.5
+
+def elasti_loss(x, y):
     # x is np.array with shape (batch_size, out_dim) ?
     # y is np.array with shape (batch_size, out_dim) ?
     # lambda between 0 and 1 is the tradeoff between L1 and L2
     #l1 = np.abs(np.array(x - y))
     #l2 = np.square(np.array(x - y))
-    return (lamduh*np.abs(x-y) + (1-lambduh)*np.square(x-y))
+    return (lambduh * tf.math.abs(x-y) + (1-lambduh) * tf.math.square(x-y))
+    #return (lambduh*np.abs(x-y) + (1-lambduh)*np.square(x-y))
 
 ### run with python3 model_big_conv.py dataset_name 1 n_epochs modelname True
 
@@ -124,14 +127,13 @@ print("model:")
 print(model.summary())
 print("compiling model...")
 #model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
-model.compile(optimizer=keras.optimizers.adam_v2.Adam(learning_rate=4e-4), loss=elasti_loss,
-              metrics=[elasti_loss])
+model.compile(optimizer="adam", loss=elasti_loss, metrics=[elasti_loss, "mean_squared_error"])
 ### insert callbacks here
 callbackL = []
 if save_checkpoints:
     checkpoint_callbk = tf.keras.callbacks.ModelCheckpoint(
         default_mdlname, # name of file to save the best model to
-        monitor="val_mean_squared_error", # prefix val to specify that we want the model with best macroF1 on the validation data
+        monitor="val_loss", # prefix val to specify that we want the model with best macroF1 on the validation data
         verbose=1, # prints out when the model achieve a better epoch
         mode="min", # the monitored metric should be maximized
         save_freq="epoch", # clear
