@@ -128,7 +128,7 @@ model.compile(optimizer="adam", loss=elasti_loss, metrics=[elasti_loss, "mean_sq
 callbackL = []
 if save_checkpoints:
     checkpoint_callbk = tf.keras.callbacks.ModelCheckpoint(
-        default_mdlname, # name of file to save the best model to
+        default_mdlname + ".h5", # name of file to save the best model to
         monitor="val_loss", # prefix val to specify that we want the model with best macroF1 on the validation data
         verbose=1, # prints out when the model achieve a better epoch
         mode="min", # the monitored metric should be maximized

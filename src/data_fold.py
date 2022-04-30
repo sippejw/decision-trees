@@ -163,11 +163,13 @@ class satimg_set (kr_utils.Sequence):
         #return picture data batch
         ret_indices = self.indexes[idx*self.batch_size : min(((idx + 1)*self.batch_size), self.full_data.shape[0])]
         if self.mem_sensitive:
+            #print(ret_indices)
             ret_imgs = np.zeros((len(ret_indices), self.img_size, self.img_size, 3))
             for i in range(len(ret_indices)):
                 #print("img_ref=", self.path_prefix+self.X_img_ref[i])
-                ret_imgs[i] = self.load_img(self.path_prefix + self.X_img_ref[i])
+                ret_imgs[i] = self.load_img(self.path_prefix + self.X_img_ref[ret_indices[i]])
             return ret_imgs, self.y[ret_indices]
         else:
+            
             return self.img_memory[ret_indices], self.y[ret_indices]
         

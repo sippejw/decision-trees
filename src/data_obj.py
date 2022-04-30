@@ -36,6 +36,7 @@ class satimg_loader:
         self.test_set = satimg_set(test_data_in_np, shuffle[0], "../data/satellite_images/", batch[0], imgsize,
                               musigs[0], dataname=dataname + "_test_set", mem_sensitive=mem, observe_mode=omode)
 
+        print(self.test_set.X_img_ref[:10])
         self.train_fold = []
         self.validation_fold = []
 

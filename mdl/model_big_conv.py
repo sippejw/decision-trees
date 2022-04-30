@@ -71,6 +71,7 @@ print(b_x_trial.shape, b_y_trial.shape)
 
 print("building model..")
 
+"""
 base_model = EfficientNetB1(weights='imagenet', include_top=False)
 img_in = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
                                   leras.layers.Conv2D(fiters=3, kernel_size=(3, 3), strides=2, padding='valid', activation='relu'),
@@ -89,7 +90,7 @@ model = Model(inputs=base_model.input, outputs=predictions)
 
 
 """
-model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
+model = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
                                  keras.layers.Conv2D(filters=64, kernel_size=(3, 3), strides=2, padding='same', activation="relu"),
                                  keras.layers.MaxPooling2D(2, 2),
                                  keras.layers.Conv2D(filters=128, kernel_size=(3, 3), strides=2, padding='same', activation="relu"),
@@ -103,7 +104,7 @@ model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size,
                                  keras.layers.Dense(128, activation="relu"),
                                  keras.layers.Dense(1)])
 
-"""
+
 print("model:")
 print(model.summary())
 print("compiling model...")
@@ -112,7 +113,7 @@ model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_square
 callbackL = []
 if save_checkpoints:
     checkpoint_callbk = tf.keras.callbacks.ModelCheckpoint(
-        default_mdlname, # name of file to save the best model to
+        default_mdlname+".h5", # name of file to save the best model to
         monitor="val_mean_squared_error", # prefix val to specify that we want the model with best macroF1 on the validation data
         verbose=1, # prints out when the model achieve a better epoch
         mode="min", # the monitored metric should be maximized
