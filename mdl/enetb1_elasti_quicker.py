@@ -123,7 +123,7 @@ print("model:")
 print(model.summary())
 print("compiling model...")
 #model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
-model.compile(optimizer="adam", loss=elasti_loss, metrics=[elasti_loss, "mean_squared_error"])
+model.compile(optimizer="adam", loss="mean_squared_error", metrics=[elasti_loss, "mean_squared_error", "mean_absolute_error"])
 ### insert callbacks here
 callbackL = []
 if save_checkpoints:

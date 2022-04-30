@@ -47,10 +47,11 @@ def elasti_loss(x, y):
 ### change this based on the model
 ### gp_name, mdl_paths, mdl_names, mdl_loaders must be the same size
 ### load this dataset
-data_name = "mini_data"
+data_name = "mini_data_marshall"
 ### directory where graphs are spat out
-group_name = "model_comparison_1"
+group_name = "model_comparison_marshall"
 ### locations of models to load
+#model_paths = ["../mdl/enetb1_fast.dat.h5", "../mdl/big_conv.dat.h5"]
 model_paths = ["../mdl/modelname.h5", "../mdl/mdlwank.h5"]
 ### names of models
 #model_names = ["ENET-B1-Modified-Elastic"] #also add "Big-Conv-IFS-MSE"
@@ -237,6 +238,9 @@ n_girls_1_pyplt([np.array(actuals), np.array(actuals)],
                 title="Predicted Fire Size")
 #also include overlay??
 #p
+print("YHATS ***")
+print(yhats)
+print(actuals)
 
 
 print("DATA REPORT ***")

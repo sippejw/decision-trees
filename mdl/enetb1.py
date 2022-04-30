@@ -55,6 +55,11 @@ if kwa_len > 5 and sys.argv[5] == "True":
 img_size = 512
 batch_size = 12
 
+lambduh = 0.6
+print("using lamda =", lambduh, "for elasti-loss")
+def elasti_loss(x, y):
+    return (lambduh * tf.math.abs(x-y) + (1-lambduh) * tf.math.square(x-y))
+
 print("imported all")
 
 ### test
@@ -114,7 +119,8 @@ model1 = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size,
 print("model:")
 print(model.summary())
 print("compiling model...")
-model.compile(loss="mean_squared_error", optimizer="adam", metrics=["mean_squared_error"])
+model.compile(loss="mean_squared_error", optimizer="adam",
+              metrics=[elasti_loss, "mean_squared_error", "mean_absolute_error"])
 ### insert callbacks here
 callbackL = []
 if save_checkpoints:
