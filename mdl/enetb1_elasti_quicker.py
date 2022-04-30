@@ -85,19 +85,14 @@ print("building model..")
 
 base_model = EfficientNetB1(weights='imagenet', include_top=False)
 img_in = keras.models.Sequential([keras.layers.InputLayer(input_shape=(img_size, img_size, 3)),
-                                  keras.layers.Conv2D(filters=3, kernel_size=(3, 3), strides=2, padding='valid', activation='relu'),
-                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
-                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
-                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
-                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu'),
-                                  keras.layers.MaxPooling2D(pool_size = (3, 3), strides=1, padding='valid'),
-                                  keras.layers.Conv2D(filters=3, kernel_size=(4, 4), strides=1, padding='valid', activation='relu')])
+                                  keras.layers.MaxPooling2D(pool_size = (2, 2), strides=2, padding='valid')])
 
 #img_out = img_in.output
 print("in_shape: ", img_in.output_shape)
 print("pre_in_shape: ", base_model.input_shape)
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
+x = Dense(1024, activation='relu')(x)
 x = Dense(1024, activation='relu')(x)
 out_pred = Dense(1, activation='relu')(x)
 tmodel = Model(inputs=base_model.input, outputs=out_pred)
