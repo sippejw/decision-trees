@@ -30,6 +30,7 @@ from data_fold import satimg_set
 
 img_size = 512
 batch_size = 1
+
 #test_size = 0
 
 lambduh = 0.6
@@ -42,9 +43,35 @@ def elasti_loss(x, y):
 #sys.path.insert(0, '../saved')
 
 
+### SETUP DATA
+### change this based on the model
+### gp_name, mdl_paths, mdl_names, mdl_loaders must be the same size
+### load this dataset
 data_name = "mini_data"
+### directory where graphs are spat out
+group_name = "model_comparison_1"
+### locations of models to load
+model_paths = ["../mdl/modelname.h5", "../mdl/mdlwank.h5"]
+### names of models
+#model_names = ["ENET-B1-Modified-Elastic"] #also add "Big-Conv-IFS-MSE"
+model_names = ["ENET-B1-Modified-Elastic", "Big-Conv-IFS-MSE"]
+### model loaders (so keras knows how to load the weights)
+### ...see down below, fuck you python
+### store loaded models here
+loaded_models = []
+saveloc = ""
+#keep
+metric = ["MSE", "MAE", "ELASTIC (lambda = 0.6)"]
+#colors for graphs... must be same size, 4
+actual_colors = ["blue", "orange", "pink", "grey"]
+log_colors = ["green", "red", "purple", "black"]
+dotsize = 3
 
-dataset = satimg_loader("mini_data", 1, [True, True, True], [1, 1, 1],
+
+
+
+
+dataset = satimg_loader(data_name, 1, [True, True, True], [1, 1, 1],
                         img_size, "default", True, "per")
 
 def load_bigconv(pathstr):
@@ -74,8 +101,8 @@ def load_elastiquick(pathstr):
                                       keras.layers.MaxPooling2D(pool_size = (2, 2), strides=2, padding='valid')])
 
     #img_out = img_in.output
-    print("in_shape: ", img_in.output_shape)
-    print("pre_in_shape: ", base_model.input_shape)
+    #print("in_shape: ", img_in.output_shape)
+    #print("pre_in_shape: ", base_model.input_shape)
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
     x = Dense(1024, activation='relu')(x)
@@ -92,7 +119,7 @@ def load_elastiquick(pathstr):
     elastiquick.load_weights(pathstr)
     return elastiquick
 
-def from_model(models):
+def from_model(models, verbosity=0):
     predictions = [[[], [], []] for i in range(len(models))]
     yhat = [[] for ii in range(len(models))]
     actuals = []
@@ -100,7 +127,7 @@ def from_model(models):
         img, lbl = dataset.test_set[i]
         actuals.append(lbl[0])
         for j in range(len(models)):
-            _, elasti, mse, mae = models[j].evaluate(img, [lbl], verbose=2)
+            _, elasti, mse, mae = models[j].evaluate(img, [lbl], verbose=verbosity)
             yhat[j].append(models[j].predict(img))
             predictions[j][0].append(mse)
             predictions[j][1].append(mae)
@@ -109,54 +136,124 @@ def from_model(models):
 
 def actual_predicted(data_actual, data_predicted, modelname, color):
     plt.scatter(data_actual, data_predicted,
-                s=1.5, c=color, alpha=1)
+                s=dotsize, c=color, alpha=1)
 
     plt.xlabel("Actual Fire Size (acres)")
     plt.ylabel("Predicted Fire Size (acres)")
-    plt.title("Actual vs Predicted Fire Sizes (" + modelname +", Test Set)")
-    plt.show()
-    plt.savefig("../saved/"+modelname+"_actual_predicted.png")
+    plt.title("Actual vs Predicted Fire Sizes \n(" + modelname +", Test Set)")
+    plt.savefig(saveloc + "/" + modelname + "_actual_predicted.png")
+    plt.clf()
+    #plt.show()
 
 def log_actual_predicted(data_actual, data_predicted, modelname, color):
     plt.scatter(np.log(data_actual), np.log(data_predicted),
-                s=1.5, c=color, alpha=1)
+                s=dotsize, c=color, alpha=1)
 
     plt.xlabel("Actual Fire Size (log acres)")
     plt.ylabel("Predicted Fire Size (log acres)")
-    plt.title("Actual vs Predicted Fire Sizes (" + modelname +", Test Set)")
-    plt.show()
-    plt.savefig("../saved/"+modelname+"_log_actual_predicted.png")
+    plt.title("Actual vs Predicted Fire Sizes \n(" + modelname +", Test Set)")
+    plt.savefig(saveloc + "/" + modelname + "_log_actual_predicted.png")
+    plt.clf()
+    #plt.show()
 
 def actual_metric(data_actual, metric_dist, modelname, color, metric):
     plt.scatter(data_actual, metric_dist,
-                s=1.5, c=color, alpha=1)
+                s=dotsize, c=color, alpha=1)
 
     plt.xlabel("Actual Fire Size (acres)")
     plt.ylabel("Error (" + metric + ")")
-    plt.title("Actual Fire Size Prediction Error (" + modelname +
+    plt.title("Actual Fire Size Prediction Error \n(" + modelname +
               ", " + metric + ", Test Set)")
-    plt.show()
-    plt.savefig("../saved/"+modelname+"_actual_"+metric+".png")
+    plt.savefig(saveloc + "/" + modelname + "_actual_"+metric+".png")
+    plt.clf()
+    #plt.show()
 
 def log_actual_metric(data_actual, metric_dist, modelname, color, metric):
     plt.scatter(np.log(data_actual), metric_dist,
-                s=1.5, c=color, alpha=1)
+                s=dotsize, c=color, alpha=1)
 
     plt.xlabel("Log Actual Fire Size (log acres)")
     plt.ylabel("Error (" + metric + ")")
-    plt.title("Actual Fire Size Prediction Error (" + modelname +
+    plt.title("Actual Fire Size Prediction Error \n(" + modelname +
               ", " + metric + ", Test Set)")
-    plt.show()
-    plt.savefig("../saved/"+modelname+"_log_actual_"+metric+".png")
+    plt.savefig(saveloc + "/" + modelname + "_log_actual_"+metric+".png")
+    plt.clf()
+    #plt.show()
+
+def n_girls_1_pyplt(data_x, data_y, logx, logy, mdlnames, colors, metric, xlabel, ylabel, title, drawlines=True):
+    if logx:
+        for i in range(len(data_x)):
+            data_x[i] = np.log(data_x[i])
+    if logy:
+        for i in range(len(data_y)):
+            data_y[i] = np.log(data_y[i])
+    if drawlines:
+        for i in range(len(data_x[0])):
+            xv = [data_x[0][i], data_x[0][i]]
+            yv = [data_y[0][i], data_y[1][i]]
+            plt.plot(xv, yv, c="black", linewidth=0.5, alpha=0.7)
+    for i in range(len(data_x)):
+        plt.scatter(data_x[i], data_y[i], s=dotsize, c=colors[i], label=mdlnames[i])
     
+        
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend()
+    plt.title("Model Comparison (" + title + ")")
+    plt.savefig(saveloc + "/mdl_comparison_"+title+".png")
+    plt.clf()
+    
+
+
+
+#model_loaders = [load_elastiquick]
+model_loaders = [load_elastiquick, load_bigconv]
 
 ### load models
 #bigconv = load_bigconv("../saved/bigconv/big_conv.dat.data-00000-of-00001")
 #bigconv = load_bigconv("../mdl/modelname.h5")
+os.system("rm -r ../saved/comparison_" + group_name)
+os.mkdir("../saved/comparison_" + group_name)
+saveloc =  "../saved/comparison_" + group_name
+for i in range(len(model_names)):
+    loaded_models.append(model_loaders[i](model_paths[i]))
+actuals, yhats, predictions = from_model(loaded_models)
+for i in range(len(model_names)):
+    actual_predicted(np.array(actuals), np.array(yhats[i]), model_names[i], actual_colors[0])
+    log_actual_predicted(np.array(actuals), np.array(yhats[i]), model_names[i], log_colors[0])
+
+    for j in range(len(metric)):
+        actual_metric(np.array(actuals), np.array(predictions[i][j]), model_names[i], actual_colors[j+1], metric[j])
+        log_actual_metric(np.array(actuals), np.array(predictions[i][j]), model_names[i], log_colors[j+1], metric[j])
+
+print(np.array(yhats).shape)
+print(np.array(yhats)[0][0])
+n_girls_1_pyplt([np.array(actuals), np.array(actuals)],
+                [np.array(yhats[0])[:,0], np.array(yhats[1])[:,0]],
+                logx=True, logy=True, mdlnames = model_names,
+                colors=actual_colors, metric="",
+                xlabel="Actual Log Fire Size (log acres)",
+                ylabel="Predicted Log Fire Size (log acres)",
+                title="Predicted Fire Size")
+#also include overlay??
+#p
+
+
+print("DATA REPORT ***")
+for i in range(len(model_names)):
+    #compute avg metrics
+    print("- MODEL " + model_names[i])
+    for j in range(len(metric)):
+        avg_metric = sum(predictions[i][j])/len(predictions[i][j])
+        print("  - METRIC " + metric[j] + ": " + str(avg_metric))
+        
+    #print(model_names[i], "penis")
+    
+"""
 elastiquick = load_elastiquick("../mdl/modelname.h5")
 actuals, yhats, predictions = from_model([elastiquick])
 #actuals, yhats, predictions = from_model([bigconv])
-models = ["elasti"]
+#models = ["elasti"]
 print(yhats)
 for i in range(len(models)):
     log_actual_metric(np.array(actuals), np.array(predictions[i][2]), models[i], "orange", "elastic")
@@ -166,3 +263,4 @@ for i in range(len(models)):
 
 #log_actual_predicted([1, 2, 1, 1.5, 3], [2, 3, 3, 2, 5], "wank", "blue")
 #log_actual_metric([1, 2, 1, 1.5, 3], [2, 3, 3, 2, 5], "wank", "blue", "mse")
+"""
