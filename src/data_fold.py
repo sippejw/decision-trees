@@ -138,6 +138,13 @@ class satimg_set (kr_utils.Sequence):
                 for j in range(3):
                     self.img_memory[i,:,:,j] = (self.img_memory[i,:,:,j] - self.mean_stds[0][i]) / self.mean_stds[1][i]
 
+    def apply_given_m_s(self, m_s):
+        self.mean_stds = m_s
+        if not self.mem_sensitive:
+            for i in range(self.full_data.shape[0]):
+                for j in range(3):
+                    self.img_memory[i,:,:,j] = (self.img_memory[i,:,:,j] - self.mean_stds[0][i]) / self.mean_stds[1][i]
+
     def on_epoch_end(self):
         if self.shuffle:
             np.random.shuffle(self.indexes)

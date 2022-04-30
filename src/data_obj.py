@@ -39,6 +39,7 @@ class satimg_loader:
         print(self.test_set.X_img_ref[:10])
         self.train_fold = []
         self.validation_fold = []
+        self.train_m_s = []
 
         for i in range(self.k_folds):
             temp_train = pd.read_csv("../data/"+dataname+"/train_fold_"+str(i)+"/trainset.csv").to_numpy()
@@ -47,12 +48,23 @@ class satimg_loader:
             self.train_fold.append(satimg_set(temp_train, shuffle[2], "../data/satellite_images/", batch[2], imgsize,
                               musigs[2], dataname=dataname + "_train_set", mem_sensitive=mem, observe_mode=omode))
             fold_m_s = self.train_fold[-1].get_or_compute_m_s(mode_in=omode)
+            self.train_m_s.append(fold_m_s)
             print(fold_m_s)
             self.train_fold[-1].apply_observed_m_s()
 
             self.validation_fold.append(satimg_set(temp_val, shuffle[1], "../data/satellite_images/", batch[1], imgsize,
                               fold_m_s, dataname=dataname + "_validation_set", mem_sensitive=mem, observe_mode=omode))
 
+        mean_means_mean_stds = [np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0])]
+        for i in range(self.k_folds):
+            for k in range(2):
+                mean_means_mean_stds[k] += self.train_m_s[i][k]
+        for j in range(2):
+            mean_means_mean_stds[k] /= self.k_folds
+
+        print("appling updated means for test set...")
+        self.test_set.apply_given_m_s(mean_means_mean_stds)
+        print("dunzo")
     
         print("sets built.")
         """
